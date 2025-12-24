@@ -2,7 +2,7 @@
 import { Box, TextField, Stack, Typography, Paper, CircularProgress, Chip } from '@mui/material';
 import React, { useState } from 'react';
 import axios from 'axios';
-import CustomButton from './components/Button/CustomButton';
+import CustomButton from '../components/Button/CustomButton';
 
 type Message = {
   role: 'user' | 'assistant';
@@ -10,7 +10,7 @@ type Message = {
   sources?: Array<{ chapter: string; verse: string; chapterName: string }>;
 };
 
-export default function Home() {
+export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,39 +44,24 @@ export default function Home() {
   };
 
   return (
-    <Box className="flex flex-col h-full bg-gradient-to-b from-orange-50/30 to-transparent dark:from-orange-950/20">
-      <Box className="p-6 border-b border-gray-200 dark:border-gray-800 flex-shrink-0 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm">
-        <Typography variant="h4" className="font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
+    <Box className="flex flex-col h-full">
+      <Box className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <Typography variant="h4">
           Ask About Bhagavad Gita
-        </Typography>
-        <Typography variant="body2" className="text-gray-600 dark:text-gray-400 mt-1">
-          Powered by AI • Insights from 700 verses
         </Typography>
       </Box>
 
       <Box className="flex-1 overflow-y-auto p-4 min-h-0">
         <Stack spacing={2}>
           {messages.length === 0 && (
-            <Paper className="p-6 bg-gradient-to-br from-orange-50 to-white dark:from-orange-950/30 dark:to-neutral-900 border border-orange-100 dark:border-orange-900/30" sx={{ borderRadius: '16px' }}>
-              <Typography variant="h6" className="text-orange-600 dark:text-orange-400 mb-3 font-semibold">
-                ✨ Start Your Journey
-              </Typography>
-              <Typography variant="body2" className="text-gray-700 dark:text-gray-300 mb-3">
+            <Paper className="p-4 bg-gray-50 dark:bg-neutral-800">
+              <Typography variant="body2" className="text-gray-600 dark:text-gray-400">
                 Ask any question about the Bhagavad Gita. For example:
               </Typography>
-              <ul className="space-y-2 ml-4">
-                <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start gap-2">
-                  <span className="text-orange-500">→</span>
-                  <span>What does Chapter 2, Verse 47 teach?</span>
-                </li>
-                <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start gap-2">
-                  <span className="text-orange-500">→</span>
-                  <span>Tell me about karma yoga</span>
-                </li>
-                <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start gap-2">
-                  <span className="text-orange-500">→</span>
-                  <span>What is the meaning of detachment?</span>
-                </li>
+              <ul className="mt-2 ml-4 text-sm text-gray-600 dark:text-gray-400">
+                <li>What does Chapter 2, Verse 47 teach?</li>
+                <li>Tell me about karma yoga</li>
+                <li>What is the meaning of detachment?</li>
               </ul>
             </Paper>
           )}
@@ -86,10 +71,9 @@ export default function Home() {
               key={idx}
               className={`p-4 ${
                 msg.role === 'user'
-                  ? 'bg-gradient-to-br from-orange-500 to-orange-600 text-white ml-auto max-w-[80%] shadow-lg'
-                  : 'bg-white dark:bg-neutral-800 mr-auto max-w-[80%] border border-gray-200 dark:border-gray-700'
+                  ? 'bg-blue-50 dark:bg-blue-900 ml-auto max-w-[80%]'
+                  : 'bg-gray-50 dark:bg-neutral-800 mr-auto max-w-[80%]'
               }`}
-              sx={{ borderRadius: '16px' }}
             >
               <Typography variant="body1" className="whitespace-pre-wrap">
                 {msg.content}
@@ -121,7 +105,7 @@ export default function Home() {
         </Stack>
       </Box>
 
-      <Box className="p-4 border-t border-gray-200 dark:border-gray-800 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-md flex-shrink-0">
+      <Box className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-black flex-shrink-0">
         <form onSubmit={handleSubmit}>
           <Stack direction="row" spacing={2}>
             <TextField
@@ -132,17 +116,6 @@ export default function Home() {
               disabled={loading}
               multiline
               maxRows={3}
-              autoComplete="off"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: '#ff6b35',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#ff6b35',
-                  },
-                },
-              }}
             />
             <CustomButton
               variant="contained"
