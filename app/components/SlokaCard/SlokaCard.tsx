@@ -44,6 +44,7 @@ export default function SlokaCard({ item, onDelete, onEdit }: SlokaCardProps) {
                 size="small"
                 onClick={() => onEdit(item)}
                 aria-label="edit"
+                disabled
               >
                 <EditIcon fontSize="small" />
               </IconButton>
@@ -54,6 +55,7 @@ export default function SlokaCard({ item, onDelete, onEdit }: SlokaCardProps) {
                 onClick={() => onDelete(item)}
                 aria-label="delete"
                 color="error"
+                disabled
               >
                 <DeleteIcon fontSize="small" />
               </IconButton>

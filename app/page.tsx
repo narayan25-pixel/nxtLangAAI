@@ -47,10 +47,10 @@ export default function Home() {
     <Box className="flex flex-col h-full bg-gradient-to-b from-orange-50/30 to-transparent dark:from-orange-950/20">
       <Box className="p-6 border-b border-gray-200 dark:border-gray-800 flex-shrink-0 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm">
         <Typography variant="h4" className="font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
-          Ask About Bhagavad Gita
+          Life Guidance from Bhagavad Gita
         </Typography>
         <Typography variant="body2" className="text-gray-600 dark:text-gray-400 mt-1">
-          Powered by AI • Insights from 700 verses
+          Your manual for life • Find answers to any life question from 700 verses
         </Typography>
       </Box>
 
@@ -62,20 +62,20 @@ export default function Home() {
                 ✨ Start Your Journey
               </Typography>
               <Typography variant="body2" className="text-gray-700 dark:text-gray-300 mb-3">
-                Ask any question about the Bhagavad Gita. For example:
+                Ask any question about life, purpose, relationships, or challenges. The Bhagavad Gita has answers:
               </Typography>
-              <ul className="space-y-2 ml-4">
+              <ul className="space-y-2 ml-4 mt-4">
                 <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start gap-2">
                   <span className="text-orange-500">→</span>
-                  <span>What does Chapter 2, Verse 47 teach?</span>
+                  <span>How do I find my true purpose in life?</span>
                 </li>
                 <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start gap-2">
                   <span className="text-orange-500">→</span>
-                  <span>Tell me about karma yoga</span>
+                  <span>What should I do when facing a difficult decision?</span>
                 </li>
                 <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start gap-2">
                   <span className="text-orange-500">→</span>
-                  <span>What is the meaning of detachment?</span>
+                  <span>How can I overcome fear and anxiety in my work?</span>
                 </li>
               </ul>
             </Paper>

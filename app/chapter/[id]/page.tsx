@@ -106,6 +106,7 @@ export default function ChapterPage({ params }: { params: Promise<{ id: string }
           startIcon={<AddIcon />}
           onClick={() => router.push(`/addSloka?chapterNumber=${id}&chapterName=${encodeURIComponent(chapterName)}`)}
           variant="contained"
+          disabled
           sx={{
             background: 'linear-gradient(135deg, #ff6b35 0%, #ff8c61 100%)',
             color: '#fff',
@@ -268,6 +269,7 @@ export default function ChapterPage({ params }: { params: Promise<{ id: string }
             <Button 
               type="submit"
               variant="contained"
+              disabled
               sx={{
                 background: 'linear-gradient(135deg, #ff6b35 0%, #ff8c61 100%)',
                 '&:hover': {

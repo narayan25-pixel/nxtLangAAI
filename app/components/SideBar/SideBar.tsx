@@ -83,13 +83,13 @@ export default function SideBar() {
           fullWidth
           variant="outlined"
         />
-        <CustomButton
+        {/*<CustomButton
           color="secondary"
           title="Add New Sloka"
           onClick={() => router.push('/addSloka')}
           fullWidth
           variant="outlined"
-        />
+        />*/}
 
         {/* Logout - Desktop only (mobile has it in header) */}
         <Box className="hidden lg:block mt-8 pt-6 border-t border-orange-200 dark:border-orange-900/30 w-full">

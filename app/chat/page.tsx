@@ -14,6 +14,26 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const messagesContainerRef = React.useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  };
+
+  React.useEffect(() => {
+    // Only auto-scroll if container is scrolled near the bottom or at the top (new conversation)
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      const isEmpty = messages.length === 0;
+      
+      if (isNearBottom || isEmpty) {
+        setTimeout(scrollToBottom, 0);
+      }
+    }
+  }, [messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +71,7 @@ export default function ChatPage() {
         </Typography>
       </Box>
 
-      <Box className="flex-1 overflow-y-auto p-4 min-h-0">
+      <Box className="flex-1 overflow-y-auto p-4 min-h-0" ref={messagesContainerRef}>
         <Stack spacing={2}>
           {messages.length === 0 && (
             <Paper className="p-4 bg-gray-50 dark:bg-neutral-800">
