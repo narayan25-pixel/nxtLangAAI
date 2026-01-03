@@ -26,7 +26,7 @@ export default function page({ params }: { params: Promise<{ id: string; verseid
     <div className="p-4 lg:w-3/4"> 
       <Button
           startIcon={<ArrowBackIcon />}
-          onClick={() => router.push('/')}
+          onClick={() => router.back()}
           variant="outlined"
           sx={{
             borderColor: '#ff6b35',
