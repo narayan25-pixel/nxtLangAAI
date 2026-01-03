@@ -83,15 +83,18 @@ export async function POST(req: NextRequest) {
     });
     
     const answer = completion.choices[0]?.message?.content || 'No response generated.';
+
+      const sources = relevantSlokas.map((s: any) => ({
+      chapter: s.chapterNumber,
+      verse: s.slokaNumber,
+      chapterName: s.chapterName,
+      link: `/chapter/${s.chapterNumber}/verse/${s.slokaNumber}`,
+    }));
     
     return NextResponse.json({
       success: true,
       answer,
-      sources: relevantSlokas.map((s: any) => ({
-        chapter: s.chapterNumber,
-        verse: s.slokaNumber,
-        chapterName: s.chapterName,
-      })),
+      sources: sources,
     });
     
   } catch (error: any) {

@@ -3,11 +3,12 @@ import { Box, TextField, Stack, Typography, Paper, CircularProgress, Chip } from
 import React, { useState } from 'react';
 import axios from 'axios';
 import CustomButton from '../components/Button/CustomButton';
+import { useRouter } from 'next/router';
 
 type Message = {
   role: 'user' | 'assistant';
   content: string;
-  sources?: Array<{ chapter: string; verse: string; chapterName: string }>;
+  sources?: Array<{ chapter: string; verse: string; chapterName: string; link: string }>;
 };
 
 export default function ChatPage() {
@@ -15,6 +16,8 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesContainerRef = React.useRef<HTMLDivElement>(null);
+
+  const router = useRouter();
 
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
@@ -108,8 +111,11 @@ export default function ChatPage() {
                       key={i}
                       label={`Ch ${source.chapter}:${source.verse}`}
                       size="small"
-                      variant="outlined"
                       className="mb-1"
+                      onClick={() => {
+                        console.log('Navigating to source:', source.link);
+                        router.push(source.link);
+                      }}
                     />
                   ))}
                 </Stack>

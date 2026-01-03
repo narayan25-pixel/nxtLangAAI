@@ -7,7 +7,7 @@ import CustomButton from './components/Button/CustomButton';
 type Message = {
   role: 'user' | 'assistant';
   content: string;
-  sources?: Array<{ chapter: string; verse: string; chapterName: string }>;
+  sources?: Array<{ chapter: string; verse: string; chapterName: string, link: string }>;
 };
 
 export default function Home() {
@@ -44,20 +44,20 @@ export default function Home() {
   };
 
   return (
-    <Box className="flex flex-col h-full bg-gradient-to-b from-orange-50/30 to-transparent dark:from-orange-950/20">
-      <Box className="p-6 border-b border-gray-200 dark:border-gray-800 flex-shrink-0 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm">
+    <Box className="flex flex-col h-full bg-gradient-to-b from-orange-50/30 to-transparent dark:from-orange-950/20 lg:w-3/4">
+      <Box className="p-1 lg:p-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm">
         <Typography variant="h4" className="font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
           Life Guidance from Bhagavad Gita
         </Typography>
-        <Typography variant="body2" className="text-gray-600 dark:text-gray-400 mt-1">
+        <Typography variant="body2" className="text-gray-600 dark:text-gray-400">
           Your manual for life • Find answers to any life question from 700 verses
         </Typography>
       </Box>
 
-      <Box className="flex-1 overflow-y-auto p-4 min-h-0">
-        <Stack spacing={2}>
+      <Box className="flex-1 overflow-y-auto p-0 lg:p-4 min-h-0">
+        <Stack spacing={1}>
           {messages.length === 0 && (
-            <Paper className="p-6 bg-gradient-to-br from-orange-50 to-white dark:from-orange-950/30 dark:to-neutral-900 border border-orange-100 dark:border-orange-900/30" sx={{ borderRadius: '16px' }}>
+            <Paper className="p-4 bg-gradient-to-br from-orange-50 to-white dark:from-orange-950/30 dark:to-neutral-900 border border-orange-100 dark:border-orange-900/30" sx={{ borderRadius: '16px' }}>
               <Typography variant="h6" className="text-orange-600 dark:text-orange-400 mb-3 font-semibold">
                 ✨ Start Your Journey
               </Typography>
@@ -106,6 +106,11 @@ export default function Home() {
                       size="small"
                       variant="outlined"
                       className="mb-1"
+                      onClick={() => {
+                        console.log('Navigating to source:', source.link);
+                        window.location.href = source.link;
+                       // router.push(source.link);
+                      }}
                     />
                   ))}
                 </Stack>
@@ -126,7 +131,7 @@ export default function Home() {
           <Stack direction="row" spacing={2}>
             <TextField
               fullWidth
-              placeholder="Ask a question about the Bhagavad Gita..."
+              placeholder="Ask anything about your life, get answer from Bhagavad Gita..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={loading}

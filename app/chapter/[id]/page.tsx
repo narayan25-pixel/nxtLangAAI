@@ -44,6 +44,12 @@ export default function ChapterPage({ params }: { params: Promise<{ id: string }
     }
   };
 
+  const handleClick = (item:any)=>{
+    console.log("Clicked sloka:", item);
+    setSelectedSloka(item);
+    router.push(`/chapter/${item.chapterNumber}/verse/${item.slokaNumber}`);
+  }
+
   const handleEdit = (item: any) => {
     setSelectedSloka(item);
     reset({
@@ -78,7 +84,7 @@ export default function ChapterPage({ params }: { params: Promise<{ id: string }
   const chapterName = chapterSlokas[0]?.chapterName || `Chapter ${id}`;
 
   return (
-    <div className="p-4">
+    <div className="p-4 lg:w-3/4">
       <Box className="mb-4 flex items-center justify-between">
         <Button
           startIcon={<ArrowBackIcon />}
@@ -99,31 +105,9 @@ export default function ChapterPage({ params }: { params: Promise<{ id: string }
             }
           }}
         >
-          Back to Chapters
+          Back
         </Button>
         
-        <Button
-          startIcon={<AddIcon />}
-          onClick={() => router.push(`/addSloka?chapterNumber=${id}&chapterName=${encodeURIComponent(chapterName)}`)}
-          variant="contained"
-          disabled
-          sx={{
-            background: 'linear-gradient(135deg, #ff6b35 0%, #ff8c61 100%)',
-            color: '#fff',
-            borderRadius: '12px',
-            textTransform: 'none',
-            fontWeight: 600,
-            padding: '8px 20px',
-            boxShadow: '0 4px 12px rgba(255, 107, 53, 0.25)',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #e55a2b 0%, #ff6b35 100%)',
-              boxShadow: '0 6px 20px rgba(255, 107, 53, 0.35)',
-              transform: 'translateY(-2px)',
-            }
-          }}
-        >
-          Add Sloka
-        </Button>
       </Box>
 
       <Typography variant="h4" className="mb-4">
@@ -140,8 +124,9 @@ export default function ChapterPage({ params }: { params: Promise<{ id: string }
               <SlokaCard
                 key={s?._id ?? s?.id ?? `${s?.chapterNumber}-${s?.slokaNumber}`}
                 item={s}
-                onDelete={handleDelete}
-                onEdit={handleEdit}
+                onClick={handleClick}
+                //onDelete={handleDelete}
+                //onEdit={handleEdit}
               />
             ))
           ) : (
