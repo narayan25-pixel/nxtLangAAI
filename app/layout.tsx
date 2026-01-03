@@ -4,16 +4,6 @@ import "./globals.css";
 import Providers from "./provider";
 import SideBar from "./components/SideBar/SideBar";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
   title: "Atmagyaan - Life Manual from Bhagavad Gita",
   description: "Self-knowledge and wisdom for life's journey",
@@ -26,7 +16,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&display=swap"
+          rel="stylesheet"
+        />
+
+      </head>
+      <body className={` antialiased`}>
 
         <div className="flex flex-col lg:flex-row min-h-screen">
           {/* Sidebar - Fixed on desktop, top navbar on mobile */}

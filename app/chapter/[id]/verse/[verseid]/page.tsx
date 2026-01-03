@@ -20,8 +20,6 @@ export default function page({ params }: { params: Promise<{ id: string; verseid
   }, []);
 
    const router = useRouter();
-
-  console.log('Fetched item:', item);
   return (
     <div className="p-4 lg:w-3/4"> 
       <Button

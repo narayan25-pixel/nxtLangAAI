@@ -1,8 +1,11 @@
 'use client';
 import { Box, TextField, Stack, Typography, Paper, CircularProgress, Chip } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import CustomButton from './components/Button/CustomButton';
+import { useDispatch, useSelector } from 'react-redux';
+import { addMessage } from './storage/features/chatSlice';
+import { useRouter } from "next/navigation";
 
 type Message = {
   role: 'user' | 'assistant';
@@ -11,16 +14,31 @@ type Message = {
 };
 
 export default function Home() {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const messages = useSelector((state: any) => state.chat.messages);
+  const dispatch = useDispatch();
+  const router = useRouter();
+
+
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+
+  useEffect(() => {
+    if (bottomRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+  }, [messages]);
+
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
 
     const userMessage: Message = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMessage]);
+    dispatch(addMessage(userMessage));
     setInput('');
     setLoading(true);
 
@@ -31,13 +49,14 @@ export default function Home() {
         content: resp.data.answer,
         sources: resp.data.sources,
       };
-      setMessages(prev => [...prev, assistantMessage]);
+      dispatch(addMessage(assistantMessage));
+
     } catch (error: any) {
       const errorMessage: Message = {
         role: 'assistant',
         content: error?.response?.data?.error || 'Failed to get response. Please try again.',
       };
-      setMessages(prev => [...prev, errorMessage]);
+      dispatch(addMessage(errorMessage));
     } finally {
       setLoading(false);
     }
@@ -81,42 +100,48 @@ export default function Home() {
             </Paper>
           )}
 
-          {messages.map((msg, idx) => (
-            <Paper
-              key={idx}
-              className={`p-4 ${
-                msg.role === 'user'
-                  ? 'bg-gradient-to-br from-orange-500 to-orange-600 text-white ml-auto max-w-[80%] shadow-lg'
-                  : 'bg-white dark:bg-neutral-800 mr-auto max-w-[80%] border border-gray-200 dark:border-gray-700'
-              }`}
-              sx={{ borderRadius: '16px' }}
-            >
-              <Typography variant="body1" className="whitespace-pre-wrap">
-                {msg.content}
-              </Typography>
-              {msg.sources && msg.sources.length > 0 && (
-                <Stack direction="row" spacing={1} className="mt-2" flexWrap="wrap">
-                  <Typography variant="caption" className="text-gray-600 dark:text-gray-400 mr-2">
-                    Sources:
-                  </Typography>
-                  {msg.sources.map((source, i) => (
-                    <Chip
-                      key={i}
-                      label={`Ch ${source.chapter}:${source.verse}`}
-                      size="small"
-                      variant="outlined"
-                      className="mb-1"
-                      onClick={() => {
-                        console.log('Navigating to source:', source.link);
-                        window.location.href = source.link;
-                       // router.push(source.link);
-                      }}
-                    />
-                  ))}
-                </Stack>
-              )}
-            </Paper>
-          ))}
+          <div>
+            {(messages || []).map((msg: any, idx: any) => (
+              <div
+                key={idx}
+                className={`p-4 m-4 rounded-xl ${msg.role === 'user'
+                    ? 'bg-gradient-to-br from-orange-600 to-orange-400 text-white ml-auto w-fit max-w-[80%] shadow-lg flex justify-end'
+                    : 'bg-gray-100 dark:bg-neutral-800 mr-auto max-w-[80%] border border-gray-200 dark:border-gray-700'
+                  }`}
+              >
+                <Typography variant="body1" className="whitespace-pre-wrap">
+                  {msg.content}
+                </Typography>
+                {msg.sources && msg.sources.length > 0 && (
+                  <Stack direction="row" spacing={1} className="mt-2" flexWrap="wrap">
+                    <Typography variant="caption" className="text-gray-600 dark:text-gray-400 mr-2">
+                      Sources:
+                    </Typography>
+                    {msg.sources.map((source: any, i: any) => (
+                      <Chip
+                        key={i}
+                        label={`Ch ${source.chapter}:${source.verse}`}
+                        size="small"
+                        variant="outlined"
+                        className="mb-1"
+                        onClick={() => {
+                          router.push(source.link);
+                        }}
+                        sx={{
+                          color: "primary.main",  
+                          cursor: "pointer",       
+                          "& .MuiChip-label": {
+                            textDecoration: "underline"
+                          }
+                        }}
+
+                      />
+                    ))}
+                  </Stack>
+                )}
+              </div>
+            ))}
+          </div>
 
           {loading && (
             <Paper className="p-4 bg-gray-50 dark:bg-neutral-800 mr-auto max-w-[80%]">
@@ -127,8 +152,8 @@ export default function Home() {
       </Box>
 
       <Box className="p-4 border-t border-gray-200 dark:border-gray-800 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-md flex-shrink-0">
-        <form onSubmit={handleSubmit}>
-          <Stack direction="row" spacing={2}>
+        <form className='formSection' onSubmit={handleSubmit}>
+          <Stack ref={bottomRef} direction="row" spacing={2}>
             <TextField
               fullWidth
               placeholder="Ask anything about your life, get answer from Bhagavad Gita..."
@@ -138,6 +163,12 @@ export default function Home() {
               multiline
               maxRows={3}
               autoComplete="off"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   '&:hover fieldset': {
