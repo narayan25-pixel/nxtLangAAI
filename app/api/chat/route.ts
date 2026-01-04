@@ -1,112 +1,205 @@
 import Groq from 'groq-sdk';
 import { NextRequest, NextResponse } from 'next/server';
-import slokasData from '@/slokas.seed.json';
+import { getEmbedder } from '@/app/lib/embeddings';
+import rawSlokas from '@/slokas.embedded.json';
+
+const slokasEmbedded: any[] = rawSlokas as any[];
+
+let lastRequestTime = 0;
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-// Simple keyword search to find relevant slokas
-function searchSlokas(query: string, limit = 5) {
-  const lowerQuery = query.toLowerCase();
-  const keywords = lowerQuery.split(' ').filter(w => w.length > 2);
-  
-  const scored = slokasData.map((sloka: any) => {
-    let score = 0;
-    const searchText = `${sloka.chapterName} ${sloka.sloka}`.toLowerCase();
-    
-    // Check for chapter number match
-    if (lowerQuery.includes(`chapter ${sloka.chapterNumber}`) || 
-        lowerQuery.includes(`ch ${sloka.chapterNumber}`)) {
-      score += 10;
-    }
-    
-    // Check for sloka/verse number match
-    if (lowerQuery.includes(`verse ${sloka.slokaNumber}`) ||
-        lowerQuery.includes(`sloka ${sloka.slokaNumber}`)) {
-      score += 10;
-    }
-    
-    // Keyword matching
-    keywords.forEach(keyword => {
-      if (searchText.includes(keyword)) {
-        score += 1;
-      }
-    });
-    
-    return { sloka, score };
-  });
-  
+
+function cosineSimilarity(a: number[], b: number[]): number {
+  const dot = a.reduce((sum, val, i) => sum + val * b[i], 0);
+  const normA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
+  const normB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
+  return dot / (normA * normB);
+}
+
+
+
+export async function searchSlokasSemantic(
+  query: string,
+  limit: number = 5
+): Promise<any[]> {
+  const embedder = await getEmbedder();
+
+  // The embedder returns nested arrays, so flatten to number[]
+  const queryEmbeddingRaw = (await embedder(query, {
+    pooling: 'mean',
+    normalize: true,
+  }));
+
+  const queryEmbedding = queryEmbeddingRaw?.data as Float32Array;
+
+  // Convert to plain number[]
+  const queryEmbeddingArray = Array.from(queryEmbedding);
+
+  const scored = slokasEmbedded?.map((sloka: any) => ({
+    sloka,
+    score: cosineSimilarity(queryEmbeddingArray, sloka.embedding ?? []),
+  }));
+
   return scored
-    .filter(s => s.score > 0)
-    .sort((a, b) => b.score - a.score)
+    .sort((a: any, b: any) => b.score - a.score)
     .slice(0, limit)
-    .map(s => s.sloka);
+    .map((s: any) => s.sloka);
+}
+
+function extractVerseReference(query: string): { chapter: number; verse: number } | null {
+  // Match patterns like "chapter 1 verse 1", "ch 1 v 1", "1:1", etc.
+  const patterns = [
+    /chapter\s*(\d+)\s*(?:verse|sloka|shloka)?\s*(\d+)/i,
+    /ch\s*(\d+)\s*(?:v|verse|sloka)?\s*(\d+)/i,
+    /(\d+)[:\-.](\d+)/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = query.match(pattern);
+    if (match) {
+      return { chapter: parseInt(match[1]), verse: parseInt(match[2]) };
+    }
+  }
+  return null;
+}
+
+function extractChapterReference(query: string): number | null {
+  // Match patterns like "chapter 1", "ch 1", but NOT when followed by a verse number
+  const patterns = [
+    /chapter\s*(\d+)(?!\s*(?:verse|sloka|shloka|v|\d|[:\-.]))/i,
+    /ch\s*(\d+)(?!\s*(?:verse|sloka|v|\d|[:\-.]))/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = query.match(pattern);
+    if (match) {
+      return parseInt(match[1]);
+    }
+  }
+  return null;
 }
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting check
+    const now = Date.now();
+    if (now - lastRequestTime < 1500) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait a moment before trying again.' },
+        { status: 429 }
+      );
+    }
+    lastRequestTime = now;
+
     const { question } = await req.json();
-    
+
     if (!question || typeof question !== 'string') {
       return NextResponse.json(
         { error: 'Question is required' },
         { status: 400 }
       );
     }
-    
-    // Search for relevant slokas
-    const relevantSlokas = searchSlokas(question, 3);
-    
+
+    // Check if user is asking for a specific verse or chapter
+    // IMPORTANT: Check chapter first to avoid false matches
+    const chapterRef = extractChapterReference(question);
+    const verseRef = !chapterRef ? extractVerseReference(question) : null;
+    let relevantSlokas;
+
+    if (verseRef) {
+      // Direct lookup for specific verse
+      const specificSloka = slokasEmbedded.find(
+        s => Number(s.chapterNumber) === verseRef.chapter && Number(s.slokaNumber) === verseRef.verse
+      );
+      relevantSlokas = specificSloka ? [specificSloka] : [];
+    } else if (chapterRef) {
+      // Get all verses from the specified chapter
+      const chapterVerses = slokasEmbedded
+        .filter(s => Number(s.chapterNumber) === chapterRef)
+        .sort((a, b) => Number(a.slokaNumber) - Number(b.slokaNumber));
+
+      if (chapterVerses.length > 0) {
+        // Get diverse verses from the chapter (beginning, middle, end)
+        const totalVerses = chapterVerses.length;
+        const selectedIndices = [
+          0, // First verse
+          Math.floor(totalVerses * 0.25),
+          Math.floor(totalVerses * 0.5),
+          Math.floor(totalVerses * 0.75),
+          Math.max(0, totalVerses - 1), // Last verse
+        ];
+
+        // Remove duplicates and get unique verses
+        const uniqueIndices = [...new Set(selectedIndices)];
+        relevantSlokas = uniqueIndices.map(idx => chapterVerses[idx]).filter(Boolean);
+
+      } else {
+        relevantSlokas = [];
+      }
+    } else {
+      relevantSlokas = await searchSlokasSemantic(question, 3);
+    }
+
     // Build context from relevant slokas
     const context = relevantSlokas.length > 0
-      ? relevantSlokas.map((s: any) => 
-          `Chapter ${s.chapterNumber} (${s.chapterName}), Verse ${s.slokaNumber}:\n${s.sloka}`
-        ).join('\n\n')
+      ? relevantSlokas.map((s: any) =>
+        `Chapter ${s.chapterNumber} (${s.chapterName}), Verse ${s.slokaNumber}:\n${s.sloka}`
+      ).join('\n\n')
       : 'No specific verses found. Please provide general guidance from the Bhagavad Gita.';
-    
+
     // Call Groq API
     const completion = await groq.chat.completions.create({
       messages: [
         {
           role: 'system',
-          content: `You are a knowledgeable guide on the Bhagavad Gita. Answer questions based on the provided verses with wisdom and clarity. If no specific verses are provided, share general wisdom from the Gita. Keep responses concise and meaningful.`,
+          content: `You are a knowledgeable guide on the Bhagavad Gita.
+
+IMPORTANT: Answer the question using ONLY the verses provided below. Do not reference verses that are not listed. When explaining what a chapter teaches, base your explanation on the provided verses from that chapter.`
         },
         {
           role: 'user',
-          content: `Context from Bhagavad Gita:\n${context}\n\nQuestion: ${question}`,
-        },
+          content: `Here are the relevant verses:
+
+${context}
+
+Question: ${question}
+
+Provide an answer based only on the verses above.`
+        }
       ],
       model: 'llama-3.3-70b-versatile',
-      temperature: 0.7,
+      temperature: 0.3,
       max_tokens: 500,
     });
-    
+
     const answer = completion.choices[0]?.message?.content || 'No response generated.';
 
-      const sources = relevantSlokas.map((s: any) => ({
+    const sources = relevantSlokas.map((s: any) => ({
       chapter: s.chapterNumber,
       verse: s.slokaNumber,
       chapterName: s.chapterName,
       link: `/chapter/${s.chapterNumber}/verse/${s.slokaNumber}`,
     }));
-    
+
     return NextResponse.json({
       success: true,
       answer,
       sources: sources,
     });
-    
+
   } catch (error: any) {
     console.error('Groq API error:', error);
-    
+
     if (error?.status === 429) {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again in a moment.' },
         { status: 429 }
       );
     }
-    
+
     return NextResponse.json(
       { error: error?.message || 'Failed to get response from AI' },
       { status: 500 }
