@@ -37,14 +37,16 @@ jobs:
           exit 1
         fi
 
+    - name: Prepare artifact directory
+      run: |
+        mkdir -p artifact-upload
+        cp -r .next artifact-upload/
+        cp -r public artifact-upload/
+        cp package.json package-lock.json next.config.ts artifact-upload/
+        
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: production-build
-        path: |
-          .next
-          public
-          package.json
-          package-lock.json
-          next.config.ts
+        path: artifact-upload/
         retention-days: 7
