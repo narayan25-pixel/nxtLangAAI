@@ -46,4 +46,5 @@ jobs:
           public/
           package.json
           package-lock.json
+          next.config.ts
         retention-days: 7
