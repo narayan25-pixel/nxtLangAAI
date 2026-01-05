@@ -26,6 +26,7 @@ jobs:
       run: npm run build
       env:
         NODE_ENV: production
+        GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
     - name: Check build output
       run: |
