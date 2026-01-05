@@ -44,4 +44,6 @@ jobs:
         path: |
           .next/
           public/
+          package.json
+          package-lock.json
         retention-days: 7
