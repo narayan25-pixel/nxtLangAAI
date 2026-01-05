@@ -1,7 +1,6 @@
 "use client";
-import { use, useState } from "react";
+import { use } from "react";
 import SlokaCard from "@/app/components/SlokaCard/SlokaCard";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import { Typography, Button, Box } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";

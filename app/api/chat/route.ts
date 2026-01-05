@@ -3,7 +3,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getEmbedder } from '@/app/lib/embeddings';
 import rawSlokas from '@/slokas.embedded.json';
 
-const slokasEmbedded: any[] = rawSlokas as any[];
+interface Sloka {
+  chapterNumber: string;
+  slokaNumber: string;
+  chapterName: string;
+  sloka: string;
+  embedding?: number[];
+}
+
+const slokasEmbedded: Sloka[] = rawSlokas as Sloka[];
 
 let lastRequestTime = 0;
 
@@ -24,7 +32,7 @@ function cosineSimilarity(a: number[], b: number[]): number {
 export async function searchSlokasSemantic(
   query: string,
   limit: number = 5
-): Promise<any[]> {
+): Promise<Sloka[]> {
   const embedder = await getEmbedder();
 
   // The embedder returns nested arrays, so flatten to number[]
@@ -38,15 +46,15 @@ export async function searchSlokasSemantic(
   // Convert to plain number[]
   const queryEmbeddingArray = Array.from(queryEmbedding);
 
-  const scored = slokasEmbedded?.map((sloka: any) => ({
+  const scored = slokasEmbedded?.map((sloka: Sloka) => ({
     sloka,
     score: cosineSimilarity(queryEmbeddingArray, sloka.embedding ?? []),
   }));
 
   return scored
-    .sort((a: any, b: any) => b.score - a.score)
+    .sort((a, b) => b.score - a.score)
     .slice(0, limit)
-    .map((s: any) => s.sloka);
+    .map((s) => s.sloka);
 }
 
 function extractVerseReference(query: string): { chapter: number; verse: number } | null {
@@ -107,7 +115,7 @@ export async function POST(req: NextRequest) {
     // IMPORTANT: Check chapter first to avoid false matches
     const chapterRef = extractChapterReference(question);
     const verseRef = !chapterRef ? extractVerseReference(question) : null;
-    let relevantSlokas;
+    let relevantSlokas: Sloka[];
 
     if (verseRef) {
       // Direct lookup for specific verse
@@ -145,7 +153,7 @@ export async function POST(req: NextRequest) {
 
     // Build context from relevant slokas
     const context = relevantSlokas.length > 0
-      ? relevantSlokas.map((s: any) =>
+      ? relevantSlokas.map((s: Sloka) =>
         `Chapter ${s.chapterNumber} (${s.chapterName}), Verse ${s.slokaNumber}:\n${s.sloka}`
       ).join('\n\n')
       : 'No specific verses found. Please provide general guidance from the Bhagavad Gita.';
@@ -177,7 +185,7 @@ Provide an answer based only on the verses above.`
 
     const answer = completion.choices[0]?.message?.content || 'No response generated.';
 
-    const sources = relevantSlokas.map((s: any) => ({
+    const sources = relevantSlokas.map((s: Sloka) => ({
       chapter: s.chapterNumber,
       verse: s.slokaNumber,
       chapterName: s.chapterName,
@@ -190,18 +198,22 @@ Provide an answer based only on the verses above.`
       sources: sources,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Groq API error:', error);
 
-    if (error?.status === 429) {
+    if (error && typeof error === 'object' && 'status' in error && error.status === 429) {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again in a moment.' },
         { status: 429 }
       );
     }
 
+    const errorMessage = error && typeof error === 'object' && 'message' in error 
+      ? String(error.message) 
+      : 'Failed to get response from AI';
+    
     return NextResponse.json(
-      { error: error?.message || 'Failed to get response from AI' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

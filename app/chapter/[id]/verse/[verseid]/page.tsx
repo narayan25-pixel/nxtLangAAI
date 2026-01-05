@@ -1,5 +1,4 @@
 'use client'
-import { useSearchParams } from "next/navigation";
 import slokasData from '@/slokas.seed.json';
 import { use, useEffect, useState } from "react";
 import SlokaCard from "@/app/components/SlokaCard/SlokaCard";
@@ -7,17 +6,24 @@ import { Button } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useRouter } from "next/navigation";
 
+interface Sloka {
+  chapterNumber: string;
+  slokaNumber: string;
+  chapterName: string;
+  sloka: string;
+}
+
 export default function page({ params }: { params: Promise<{ id: string; verseid: string }> }) {
   const { id, verseid } = use(params);
-  const [item, setItem] = useState<any>(null);
+  const [item, setItem] = useState<Sloka | undefined>(undefined);
   const filteredItem = () => {
-    const result = slokasData.find((s: any) => s.chapterNumber === id && s.slokaNumber === verseid);
+    const result = slokasData.find((s: Sloka) => s.chapterNumber === id && s.slokaNumber === verseid);
 
     setItem(result);
   }
   useEffect(() => {
     filteredItem();
-  }, []);
+  }, [id, verseid]);
 
    const router = useRouter();
   return (
@@ -48,7 +54,7 @@ export default function page({ params }: { params: Promise<{ id: string; verseid
         {item ? (
         <div>
           <SlokaCard
-            key={item?._id ?? item?.id ?? `${item?.chapterNumber}-${item?.slokaNumber}`}
+            key={`${item.chapterNumber}-${item.slokaNumber}`}
             item={item}
           />
         </div>

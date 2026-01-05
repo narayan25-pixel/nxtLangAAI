@@ -1,17 +1,22 @@
 "use client";
-import useSlokas from "@/hooks/useSlokas";
 import ChapterCard from "../components/ChapterCard/ChapterCard";
 import { Box, Typography } from "@mui/material";
 import slokas from '@/slokas.seed.json';
 
+interface Sloka {
+  chapterNumber: string;
+  slokaNumber: string;
+  chapterName: string;
+  sloka: string;
+}
 
 export default function AllSlokas() {
 
 
   // Group slokas by chapter
-  const chapterMap = new Map<string, any[]>();
+  const chapterMap = new Map<string, Sloka[]>();
   if (Array.isArray(slokas)) {
-    slokas.forEach((sloka: any) => {
+    slokas.forEach((sloka: Sloka) => {
       const key = sloka.chapterNumber;
       if (!chapterMap.has(key)) {
         chapterMap.set(key, []);
